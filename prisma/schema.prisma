@@ -1,0 +1,82 @@
+generator client {
+  provider        = "prisma-client-js"
+  output          = "../generated/prisma"
+}
+
+datasource db {
+  provider = "cockroachdb"
+  schemas  = ["app_schema"]
+}
+
+model User {
+  id           String    @id @default(cuid())
+  userName     String
+  password     String
+  email        String    @unique
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  accessToken  String?
+  refreshToken String?
+  avatar       Json?
+  orders       Json?
+  Wishlist     Json?
+  theme        Theme     @default(light)
+  
+  // Relations
+  storeId      String?  
+  store        Store?    @relation(fields: [storeId], references: [id])
+  @@schema("app_schema")
+}
+
+model Store {
+  id           String      @id @default(cuid())
+  storeName    String
+  ownerId      String      @unique
+  storeImage   Json?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  description  String
+  type         StoreType
+  itemSelled   Int         @default(0)
+  totalRevenue Float       @default(0)
+  customers    Json?       @default("0")
+  
+  // Relations
+  user       User[]
+  @@schema("app_schema")
+}
+
+model Product {
+  id            String    @id @default(cuid())
+  title         String
+  desc          String
+  productImage  Json?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  storeId       String
+  ownerId       String
+  totalProducts Int
+  price         Float
+  type          StoreType
+  itemSelled    Int       @default(0)
+  revenue       Float     @default(0)
+  customers     Json?     @default("0")
+  @@schema("app_schema")
+}
+
+// Enums for strict typing
+enum Theme {
+  light
+  dark
+  @@schema("app_schema")
+}
+
+enum StoreType {
+  electronics
+  fashion
+  living
+  cosmetics
+  books
+  sports
+  @@schema("app_schema")
+}

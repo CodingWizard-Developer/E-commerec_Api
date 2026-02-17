@@ -7,7 +7,7 @@ const cors = require("cors");
 const { v2: cloudinary } = require("cloudinary");
 
 // Middleware
-database.connectDB();
+// database.connectDB();
 app.use(express.json());
 
 const allowedOrigins = ["http://localhost:5173", "http://localhost:3000", "http://localhost:3300"];
@@ -26,7 +26,7 @@ app.use((req, res, next) => {
   res.on("finish", () => {
     const duration = Date.now() - start;
     console.log(
-      `[${new Date().toISOString()}] ${req.method}:  ${req.originalUrl} → ${res.statusCode
+      `${req.method}:  ${req.originalUrl} → ${res.statusCode
       } - ${res.statusCode >= 400 ? `Message: ${res.locals.body}` : ""
       } (${duration}ms)`
     );
