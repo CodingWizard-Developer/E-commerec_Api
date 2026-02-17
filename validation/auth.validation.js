@@ -43,9 +43,17 @@ const editUser = {
   headers: authHeader,
 };
 
+const deleteUser = {
+  header: authHeader,
+  body: joi.object().keys({
+    password: joi.string().required(),
+  }),
+};
+
 module.exports = {
   getUser,
   createUser,
   login,
   editUser,
+  deleteUser,
 };

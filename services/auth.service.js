@@ -1,8 +1,5 @@
-const {
-  generateTokens,
-  verifyRefreshToken,
-} = require("../config/Tokens");
-const { User } = require("../model/user.model");
+const { generateTokens, verifyRefreshToken } = require("../config/Tokens");
+const { User, Store } = require("../model/user.model");
 const bcrypt = require("bcryptjs");
 const { v2: cloudinary } = require("cloudinary");
 const fs = require("fs");
@@ -63,7 +60,7 @@ const getUser = async (userId) => {
   if (!myUser) {
     return {
       status: 400,
-      data: { message: "An error made", user: null },
+      response: { message: "An error made", user: null },
     };
   }
 
@@ -75,66 +72,54 @@ const getUser = async (userId) => {
 
   return {
     status: 201,
-    data: { message: "User exists", user: userToSend },
+    response: { message: "User exists", user: userToSend },
   };
 };
 
 const loginUser = async (credentials) => {
   const { email, password } = credentials;
 
-  try {
-    const isUser = await User.findOne({ email });
-    if (!isUser) {
-      return {
-        status: 403,
-        data: {
-          message: "User Does not Exist",
-          accessToken: null,
-          refreshToken: null,
-        },
-      };
-    }
-
-    const verifyPass = await bcrypt.compare(password, isUser.password);
-
-    if (!verifyPass) {
-      return {
-        status: 402,
-        data: {
-          message: "Invalid Password",
-          accessToken: null,
-          refreshToken: null,
-        },
-      };
-    }
-
-    // Generate both access and refresh tokens
-    const { accessToken, refreshToken } = generateTokens(isUser._id);
-
-    // Update user with new tokens
-    isUser.accessToken = accessToken;
-    isUser.refreshToken = refreshToken;
-    await isUser.save();
-
+  const isUser = await User.findOne({ email });
+  if (!isUser) {
     return {
-      status: 200,
-      data: {
-        message: "Successfully Logged In",
-        token: accessToken,
-        refreshToken: refreshToken,
-      },
-    };
-  } catch (error) {
-    console.error("Login error:", error);
-    return {
-      status: 500,
-      data: {
-        message: "Internal server error",
+      status: 403,
+      response: {
+        message: "User Does not Exist",
         accessToken: null,
         refreshToken: null,
       },
     };
   }
+
+  const verifyPass = await bcrypt.compare(password, isUser.password);
+
+  if (!verifyPass) {
+    return {
+      status: 402,
+      response: {
+        message: "Invalid Password",
+        accessToken: null,
+        refreshToken: null,
+      },
+    };
+  }
+
+  // Generate both access and refresh tokens
+  const { accessToken, refreshToken } = generateTokens(isUser._id);
+
+  // Update user with new tokens
+  isUser.accessToken = accessToken;
+  isUser.refreshToken = refreshToken;
+  await isUser.save();
+
+  return {
+    status: 200,
+    response: {
+      message: "Successfully Logged In",
+      token: accessToken,
+      refreshToken: refreshToken,
+    },
+  };
 };
 
 const editUser = async (data) => {
@@ -256,10 +241,40 @@ const refreshToken = async (refreshToken) => {
   }
 };
 
+const deleteUser = async ({ userId, password }) => {
+  const user = await User.findById(userId);
+
+  if (!user)
+    return {
+      status: 400,
+      response: { message: "User not found" },
+    };
+
+  const isPassMatch = await bcrypt.compare(password, user?.password);
+
+  if (!isPassMatch)
+    return {
+      status: 403,
+      response: { message: "Invalid password" },
+    };
+
+  await cloudinary.uploader.destroy(user.avatar.publicId);
+
+  if (user.storeId) await Store.findByIdAndDelete(user.storeId);
+
+  await User.findByIdAndDelete(userId);
+
+  return {
+    status: 200,
+    response: { message: "User deleted" },
+  };
+};
+
 module.exports = {
   createUser,
   getUser,
   loginUser,
   editUser,
   refreshToken,
+  deleteUser,
 };

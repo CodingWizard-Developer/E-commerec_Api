@@ -3,6 +3,7 @@ const {
   createUser,
   login,
   editUser,
+  deleteUser,
 } = require("../../validation/auth.validation");
 const validator = require("../../config/validator");
 const { authenticateToken } = require("../../config/Tokens");
@@ -24,7 +25,8 @@ router
     validator(editUser),
     upload.single("profileImage"),
     authController.editUser
-  );
+  )
+  .delete(authenticateToken, validator(deleteUser), authController.deleteUser);
 
 router.route("/login").post(validator(login), authController.loginUser);
 
