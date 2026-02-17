@@ -1,16 +1,30 @@
 const express = require("express");
 const app = express();
-const database = require("./config/db");
 const PORT = process.env.PORT || 3000;
 const routes = require("./routes/index");
 const cors = require("cors");
 const { v2: cloudinary } = require("cloudinary");
+const { prisma } = require("./config/PrismaClient");
+const { config } = require("dotenv");
+config();
+
+prisma
+  .$connect()
+  .then(() => {
+    console.log("DB connected");
+  })
+  .catch((err) => {
+    console.error("DB connection error:", err);
+  });
 
 // Middleware
-// database.connectDB();
 app.use(express.json());
 
-const allowedOrigins = ["http://localhost:5173", "http://localhost:3000", "http://localhost:3300"];
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://localhost:3000",
+  "http://localhost:3300",
+];
 
 app.use((req, res, next) => {
   const start = Date.now();
@@ -26,9 +40,9 @@ app.use((req, res, next) => {
   res.on("finish", () => {
     const duration = Date.now() - start;
     console.log(
-      `${req.method}:  ${req.originalUrl} → ${res.statusCode
-      } - ${res.statusCode >= 400 ? `Message: ${res.locals.body}` : ""
-      } (${duration}ms)`
+      `${req.method}:  ${req.originalUrl} → ${res.statusCode} - ${
+        res.statusCode >= 400 ? `Message: ${res.locals.body}` : ""
+      } (${duration}ms)`,
     );
   });
 
@@ -45,16 +59,16 @@ app.use(
       "refreshToken",
       "Authorization",
       "X-Requested-With",
-      "Accept"
+      "Accept",
     ],
     exposedHeaders: [
       "access-token",
       "refresh-token",
       "x-new-access-token",
-      "x-new-refresh-token"
+      "x-new-refresh-token",
     ],
-    credentials: true
-  })
+    credentials: true,
+  }),
 );
 cloudinary.config({
   api_key: process.env.CLOUDINARY_APIKEY,

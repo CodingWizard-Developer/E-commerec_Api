@@ -1,6 +1,6 @@
 generator client {
-  provider        = "prisma-client-js"
-  output          = "../generated/prisma"
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
 }
 
 datasource db {
@@ -8,45 +8,48 @@ datasource db {
   schemas  = ["app_schema"]
 }
 
-model User {
-  id           String    @id @default(cuid())
+model user {
+  id           String   @id @default(cuid())
   userName     String
   password     String
-  email        String    @unique
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  email        String   @unique
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
   accessToken  String?
   refreshToken String?
   avatar       Json?
   orders       Json?
   Wishlist     Json?
-  theme        Theme     @default(light)
-  
+  theme        Theme    @default(light)
+
   // Relations
-  storeId      String?  
-  store        Store?    @relation(fields: [storeId], references: [id])
+  storeId String?
+  store   store?  @relation(fields: [storeId], references: [id])
+
   @@schema("app_schema")
 }
 
-model Store {
-  id           String      @id @default(cuid())
+model store {
+  id           String    @id @default(cuid())
   storeName    String
-  ownerId      String      @unique
+  ownerId      String    @unique
   storeImage   Json?
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
   description  String
   type         StoreType
-  itemSelled   Int         @default(0)
-  totalRevenue Float       @default(0)
-  customers    Json?       @default("0")
-  
+  itemSelled   Int       @default(0)
+  totalRevenue Float     @default(0)
+  customers    Json?     @default("0")
+
   // Relations
-  user       User[]
+  user     user[]
+  products product[]
+
   @@schema("app_schema")
 }
 
-model Product {
+model product {
   id            String    @id @default(cuid())
   title         String
   desc          String
@@ -54,6 +57,7 @@ model Product {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   storeId       String
+  store         store     @relation(fields: [storeId], references: [id])
   ownerId       String
   totalProducts Int
   price         Float
@@ -61,6 +65,7 @@ model Product {
   itemSelled    Int       @default(0)
   revenue       Float     @default(0)
   customers     Json?     @default("0")
+
   @@schema("app_schema")
 }
 
@@ -68,6 +73,7 @@ model Product {
 enum Theme {
   light
   dark
+
   @@schema("app_schema")
 }
 
@@ -78,5 +84,6 @@ enum StoreType {
   cosmetics
   books
   sports
+
   @@schema("app_schema")
 }
